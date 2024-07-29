@@ -1,42 +1,65 @@
 import cv2
 import numpy as np
+import os
 
-SHOW = True
+SHOW = False
 WRITE = True
+DEBUG = False
+
+SCALE = 10
+BACKGROUND_COLOR = (205, 220, 228)  # BGR
+
+INPUT_FILE = 'ame_MiniPixel.png'
+OUTPUT_DIR = './out'
 
 
 def main():
-    image = cv2.imread('ame_MiniPixel.png', cv2.IMREAD_UNCHANGED)
+    image = cv2.imread(INPUT_FILE, cv2.IMREAD_UNCHANGED)
 
-    # scale up 10x
-    upscaled = cv2.resize(image, (0, 0), fx=10, fy=10,
+    # scale up the image
+    upscaled = cv2.resize(image, (0, 0), fx=SCALE, fy=SCALE,
                           interpolation=cv2.INTER_NEAREST)
     h, w = upscaled.shape[:2]
 
     # create a background
     reference = cv2.imread('ame_MiniPixel_Display.png', cv2.IMREAD_UNCHANGED)
     hh, ww = reference.shape[:2]
-
-    color = (205, 220, 228)  # BGR
-    background = np.full((hh, ww, 3), color, np.uint8)
-
     offsetX = (hh - w) // 2
     offsetY = (ww - h) // 2
 
-    result = background.copy()
+    shadow = cv2.imread('a_Shadow2_MiniPixelDisplay.png', cv2.IMREAD_UNCHANGED)
+    _, y = find_lower_right_pixel(image)
+    shadowOffsetX = offsetX - SCALE
+    shadowOffsetY = offsetY + y * SCALE
+
+    if DEBUG:
+        print(f'shadowOffset: ({shadowOffsetX}, {shadowOffsetY})')
+
+    result = np.full((hh, ww, 3), BACKGROUND_COLOR, np.uint8)
+    add_transparent_image(result, shadow, shadowOffsetX, shadowOffsetY)
     add_transparent_image(result, upscaled, offsetX, offsetY)
 
     if WRITE:
-        cv2.imwrite('upscaled.png', upscaled)
-        cv2.imwrite('result.png', result)
+        if not os.path.exists(OUTPUT_DIR):
+            os.makedirs(OUTPUT_DIR)
+        cv2.imwrite(os.path.join(OUTPUT_DIR, 'upscaled.png'), upscaled)
+        cv2.imwrite(os.path.join(OUTPUT_DIR, 'result.png'), result)
 
     if SHOW:
         cv2.imshow('original', image)
         cv2.imshow('upscaled', upscaled)
-        # cv2.imshow('background', background)
         cv2.imshow('result', result)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
+
+
+def find_lower_right_pixel(image):
+    h, w = image.shape[:2]
+    for y in range(h - 1, -1, -1):
+        for x in range(w - 1, -1, -1):
+            if image[y, x, 3] > 0:
+                return x, y
+    return None, None
 
 
 def add_transparent_image(background, foreground, x_offset=None, y_offset=None):
