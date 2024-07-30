@@ -10,7 +10,7 @@
       "request": "launch",
       "program": "${workspaceFolder}/src/mini_pixel/__init__.py",
       "console": "integratedTerminal",
-      "args": ["images/ame_MiniPixel.png", "-o", "./out"]
+      "args": ["images/ame_MiniPixel.png", "-o", "out"]
     }
   ]
 }

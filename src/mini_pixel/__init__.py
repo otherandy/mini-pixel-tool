@@ -84,14 +84,17 @@ def main():
     write = not args.no_write
     show = args.show
 
-    run(input_filepath, scale, background_color, display_size, add_shadow,
-        output_dir, upscale_dir, display_dir, write, flat_write, show)
+    run(input_filepath, scale,
+        background_color, display_size,
+        output_dir, upscale_dir, display_dir,
+        add_shadow, write, show)
 
 
 def run(input_filepath, scale=SCALE,
         background_color=BACKGROUND_COLOR, display_size=DISPLAY_SIZE,
         output_dir=OUTPUT_DIR, upscale_dir=UPSCALE_DIR, display_dir=DISPLAY_DIR,
         add_shadow=True, write=True, show=False):
+
     if input_filepath is None:
         input_filepath = input('Please provide an input file path: ')
 
