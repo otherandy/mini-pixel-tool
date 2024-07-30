@@ -1,0 +1,7 @@
+altgraph==0.17.4
+-e git+https://github.com/otherandy/mini-pixel-tool.git@697e523c7f3ad26d15f69c4495efae213f3b39c6#egg=mini_pixel
+numpy==2.0.1
+opencv-python==4.10.0.84
+packaging==24.1
+pyinstaller==6.9.0
+pyinstaller-hooks-contrib==2024.7
