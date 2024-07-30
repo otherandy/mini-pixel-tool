@@ -4,12 +4,15 @@ import os
 import argparse
 import textwrap
 from pathlib import Path
+from mini_pixel.colors import bgr_to_hex, hex_to_bgr
 
 # default values
 SCALE = 10
-BACKGROUND_COLOR = (205, 220, 228)  # BGR
+BACKGROUND_COLOR = bgr_to_hex((205, 220, 228))
 DISPLAY_SIZE = 500
 OUTPUT_DIR = '.'
+UPSCALE_DIR = 'Scaled'
+DISPLAY_DIR = 'Display'
 
 DEBUG = False
 
@@ -25,29 +28,41 @@ def main():
             Upscales a mini pixel, creates a new display image and adds a shadow
             (requires a_Shadow2_MiniPixelDisplay.png).
             '''),
-        epilog='Example: mini_pixel input.png -s 10 -c e4dccd -d 500 -o \'./out\' --no-shadow --no-write --show')
+        epilog=f'Example: mini_pixel input.png -s {SCALE} -c {BACKGROUND_COLOR} -d {DISPLAY_SIZE} -o out --no-shadow --no-write --show')
 
     parser.add_argument('input_filepath', type=str,
                         help='path to the input image')
     parser.add_argument('-s', type=int, default=SCALE,
                         dest='scale',
                         required=False,
-                        help='scale factor (default: 10)')
-    parser.add_argument('-c', type=str, default=bgr_to_hex(BACKGROUND_COLOR),
+                        help=f'scale factor (default: {SCALE})')
+    parser.add_argument('-c', type=str, default=BACKGROUND_COLOR,
                         dest='background_color',
                         required=False,
-                        help='background color in hex (default: e4dccd)')
+                        help=f'background color in hex (default: {BACKGROUND_COLOR})')
     parser.add_argument('-d', type=int, default=DISPLAY_SIZE,
                         dest='display_size',
                         required=False,
-                        help='final size of display image in pixels (default: 500)')
+                        help=f'final size of display image in pixels (default: {DISPLAY_SIZE})')
     parser.add_argument('-o', type=str, default=OUTPUT_DIR,
                         dest='output_dir',
                         required=False,
-                        help='output directory (default: .)')
+                        help=f'output directory (default: {OUTPUT_DIR})')
 
     parser.add_argument('--no-shadow', action='store_true',
                         help='do not add a shadow')
+
+    parser.add_argument('--flat-write', action='store_true',
+                        help='write the result to the output directory without creating subdirectories')
+    parser.add_argument('--sdir', type=str, default=UPSCALE_DIR,
+                        dest='scaled_dir',
+                        required=False,
+                        help=f'scaled output subdirectory (default: {UPSCALE_DIR})')
+    parser.add_argument('--ddir', type=str, default=DISPLAY_DIR,
+                        dest='display_dir',
+                        required=False,
+                        help=f'display output subdirectory (default: {DISPLAY_DIR})')
+
     parser.add_argument('--no-write', action='store_true',
                         help='do not write the result to the output directory')
     parser.add_argument('--show', action='store_true',
@@ -58,16 +73,25 @@ def main():
     scale = args.scale
     background_color = hex_to_bgr(args.background_color)
     display_size = args.display_size
-    output_dir = args.output_dir
     add_shadow = not args.no_shadow
+
+    output_dir = args.output_dir
+
+    flat_write = args.flat_write
+    upscale_dir = args.scaled_dir if not flat_write else ''
+    display_dir = args.display_dir if not flat_write else ''
+
     write = not args.no_write
     show = args.show
 
-    run(input_filepath, scale, background_color,
-        display_size, output_dir, add_shadow, write, show)
+    run(input_filepath, scale, background_color, display_size, add_shadow,
+        output_dir, upscale_dir, display_dir, write, flat_write, show)
 
 
-def run(input_filepath, scale=SCALE, background_color=BACKGROUND_COLOR, display_size=DISPLAY_SIZE, output_dir=OUTPUT_DIR, add_shadow=True, write=True, show=False):
+def run(input_filepath, scale=SCALE,
+        background_color=BACKGROUND_COLOR, display_size=DISPLAY_SIZE,
+        output_dir=OUTPUT_DIR, upscale_dir=UPSCALE_DIR, display_dir=DISPLAY_DIR,
+        add_shadow=True, write=True, show=False):
     if input_filepath is None:
         input_filepath = input('Please provide an input file path: ')
 
@@ -96,9 +120,44 @@ def run(input_filepath, scale=SCALE, background_color=BACKGROUND_COLOR, display_
 
     # result output
     if write:
-        write_images(upscaled, result, output_dir, input_filepath)
+        write_images(upscaled, result, input_filepath, output_dir,
+                     upscale_dir, display_dir)
     if show:
         show_images(original, upscaled, result)
+
+
+def write_images(upscaled, result, input_filepath,
+                 output_dir, upscale_dir, display_dir):
+    # create diretories if they don't exist
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    if not os.path.exists(os.path.join(output_dir, upscale_dir)):
+        os.makedirs(os.path.join(output_dir, upscale_dir))
+
+    if not os.path.exists(os.path.join(output_dir, display_dir)):
+        os.makedirs(os.path.join(output_dir, display_dir))
+
+    # write upscaled image
+    p = Path(input_filepath)
+    upscaled_path = os.path.join(
+        output_dir, upscale_dir, f'{p.stem}x10{p.suffix}')
+    if not cv2.imwrite(upscaled_path, upscaled):
+        print(f'Error: could not write upscaled image to {upscaled_path}')
+
+    # write display image
+    display_path = os.path.join(
+        output_dir, display_dir, f'{p.stem}_Display{p.suffix}')
+    if not cv2.imwrite(display_path, result):
+        print(f'Error: could not write display image to {display_path}')
+
+
+def show_images(image, upscaled, result):
+    cv2.imshow('original', image)
+    cv2.imshow('upscaled', upscaled)
+    cv2.imshow('result', result)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
 
 def add_shadow_image(background, offsetX, offsetY, scale, y):
@@ -167,63 +226,6 @@ def add_transparent_image(background, foreground, x_offset=None, y_offset=None):
 
     # overwrite the section of the background image that has been updated
     background[bg_y:bg_y + h, bg_x:bg_x + w] = composite
-
-
-def show_images(image, upscaled, result):
-    cv2.imshow('original', image)
-    cv2.imshow('upscaled', upscaled)
-    cv2.imshow('result', result)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-
-
-def write_images(upscaled, result, output_dir, input_filepath):
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-
-    # write upscaled image
-    if not os.path.exists(os.path.join(output_dir, 'Transparent 10x')):
-        os.makedirs(os.path.join(output_dir, 'Transparent 10x'))
-
-    p = Path(input_filepath)
-    upscaled_path = os.path.join(
-        output_dir, 'Transparent 10x', f'{p.stem}x10{p.suffix}')
-    if not cv2.imwrite(upscaled_path, upscaled):
-        print(f'Error: could not write upscaled image to {upscaled_path}')
-
-    # write display image
-    if not os.path.exists(os.path.join(output_dir, 'Display Form')):
-        os.makedirs(os.path.join(output_dir, 'Display Form'))
-
-    display_path = os.path.join(
-        output_dir, 'Display Form', f'{p.stem}_Display{p.suffix}')
-    if not cv2.imwrite(display_path, result):
-        print(f'Error: could not write display image to {display_path}')
-
-
-def hex_to_rgb(hex):
-    hex = hex.lstrip('#')
-    return tuple(int(hex[i:i + 2], 16) for i in (0, 2, 4))
-
-
-def rgb_to_hex(rgb):
-    return '#%02x%02x%02x' % rgb
-
-
-def rgb_to_bgr(rgb):
-    return rgb[::-1]
-
-
-def bgr_to_rgb(bgr):
-    return bgr[::-1]
-
-
-def hex_to_bgr(hex):
-    return rgb_to_bgr(hex_to_rgb(hex))
-
-
-def bgr_to_hex(bgr):
-    return rgb_to_hex(bgr_to_rgb(bgr))
 
 
 if __name__ == '__main__':
