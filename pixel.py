@@ -14,8 +14,8 @@ DEBUG = False
 
 def main():
     parser = argparse.ArgumentParser(
-        prog='main.py', description='Upscale a mini pixel, convert it to a display image and add a shadow (requires a_Shadow2_MiniPixelDisplay.png in the current directory).',
-        epilog='Example: python main.py input.png -s 10 -c e4dccd -d 500 -o \'./out\' --no-shadow --show --no-write')
+        prog='Mini Pixel Utility Tool', description='Upscale a mini pixel, convert it to a display image and add a shadow (requires a_Shadow2_MiniPixelDisplay.png in the current directory).',
+        epilog='Example: python pixel.py input.png -s 10 -c e4dccd -d 500 -o \'./out\' --no-shadow --show --no-write')
 
     parser.add_argument('input_file', type=str,
                         help='path to the input image')
