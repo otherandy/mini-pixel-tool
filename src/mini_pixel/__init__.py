@@ -20,7 +20,7 @@ def main():
         description=textwrap.dedent('''\
             Mini Pixel Utility Tool
             -----------------------
-            
+
             Upscales a mini pixel, creates a new display image and adds a shadow
             (requires a_Shadow2_MiniPixelDisplay.png in the current directory).
             '''),
@@ -100,8 +100,8 @@ def run(input_file, scale=SCALE, background_color=BACKGROUND_COLOR, display_size
 
 
 def add_shadow_image(background, offsetX, offsetY, scale, y):
-    shadow = cv2.imread(
-        'a_Shadow2_MiniPixelDisplay.png', cv2.IMREAD_UNCHANGED)
+    shadow = cv2.imread(os.path.join(os.path.dirname(__file__),
+                        'a_Shadow2_MiniPixelDisplay.png'), cv2.IMREAD_UNCHANGED)
     if shadow is None:
         print('Error: could not read shadow image a_Shadow2_MiniPixelDisplay.png')
         return

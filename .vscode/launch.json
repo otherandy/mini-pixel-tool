@@ -5,12 +5,12 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Python Debugger: Current File",
+      "name": "Python Debugger: Project",
       "type": "debugpy",
       "request": "launch",
-      "program": "${file}",
+      "program": "${workspaceFolder}/src/mini_pixel/__init__.py",
       "console": "integratedTerminal",
-      "args": ["ame_MiniPixel.png"]
+      "args": ["images/ame_MiniPixel.png"]
     }
   ]
 }
