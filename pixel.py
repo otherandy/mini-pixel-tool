@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import os
 import argparse
+import textwrap
 
 # default values
 SCALE = 10
@@ -14,7 +15,15 @@ DEBUG = False
 
 def main():
     parser = argparse.ArgumentParser(
-        prog='Mini Pixel Utility Tool', description='Upscale a mini pixel, convert it to a display image and add a shadow (requires a_Shadow2_MiniPixelDisplay.png in the current directory).',
+        prog='pixel.py',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description=textwrap.dedent('''\
+            Mini Pixel Utility Tool
+            -----------------------
+            
+            Upscales a mini pixel, creates a new display image and adds a shadow
+            (requires a_Shadow2_MiniPixelDisplay.png in the current directory).
+            '''),
         epilog='Example: python pixel.py input.png -s 10 -c e4dccd -d 500 -o \'./out\' --no-shadow --show --no-write')
 
     parser.add_argument('input_file', type=str,
