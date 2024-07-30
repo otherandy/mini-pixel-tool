@@ -15,7 +15,7 @@ DEBUG = False
 
 def main():
     parser = argparse.ArgumentParser(
-        prog='pixel.py',
+        prog='mini_pixel.py',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=textwrap.dedent('''\
             Mini Pixel Utility Tool
@@ -66,7 +66,7 @@ def main():
         display_size, output_dir, add_shadow, write, show)
 
 
-def run(input_file, scale, background_color, display_size, output_dir, add_shadow, write, show):
+def run(input_file, scale=SCALE, background_color=BACKGROUND_COLOR, display_size=DISPLAY_SIZE, output_dir=OUTPUT_DIR, add_shadow=True, write=True, show=False):
     if input_file is None:
         input_file = input('Please provide an input file path: ')
 

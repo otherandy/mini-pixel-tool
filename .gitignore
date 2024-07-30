@@ -1,2 +1,5 @@
 out
 images
+dist
+build
+*.egg-info

@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mini_pixel"
+dynamic = ["version"]
+description = "Mini Pixel Utility Tool"
+authors = [{ name = "Andrés Herrera" }]
+dependencies = ["opencv-python", "numpy"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project.scripts]
+mini_pixel = "mini_pixel.__init__:main"
