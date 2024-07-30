@@ -3,12 +3,13 @@ import numpy as np
 import os
 import argparse
 import textwrap
+from pathlib import Path
 
 # default values
 SCALE = 10
 BACKGROUND_COLOR = (205, 220, 228)  # BGR
 DISPLAY_SIZE = 500
-OUTPUT_DIR = './out'
+OUTPUT_DIR = '.'
 
 DEBUG = False
 
@@ -26,7 +27,7 @@ def main():
             '''),
         epilog='Example: python pixel.py input.png -s 10 -c e4dccd -d 500 -o \'./out\' --no-shadow --show --no-write')
 
-    parser.add_argument('input_file', type=str,
+    parser.add_argument('input_filepath', type=str,
                         help='path to the input image')
     parser.add_argument('-s', type=int, default=SCALE,
                         dest='scale',
@@ -43,7 +44,7 @@ def main():
     parser.add_argument('-o', type=str, default=OUTPUT_DIR,
                         dest='output_dir',
                         required=False,
-                        help='output directory (default: ./out)')
+                        help='output directory (default: .)')
 
     parser.add_argument('--no-shadow', action='store_true',
                         help='do not add a shadow')
@@ -53,7 +54,7 @@ def main():
                         help='do not write the result to the output directory')
     args = parser.parse_args()
 
-    input_file = args.input_file
+    input_filepath = args.input_filepath
     scale = args.scale
     background_color = hex_to_bgr(args.background_color)
     display_size = args.display_size
@@ -62,17 +63,17 @@ def main():
     write = not args.no_write
     show = args.show
 
-    run(input_file, scale, background_color,
+    run(input_filepath, scale, background_color,
         display_size, output_dir, add_shadow, write, show)
 
 
-def run(input_file, scale=SCALE, background_color=BACKGROUND_COLOR, display_size=DISPLAY_SIZE, output_dir=OUTPUT_DIR, add_shadow=True, write=True, show=False):
-    if input_file is None:
-        input_file = input('Please provide an input file path: ')
+def run(input_filepath, scale=SCALE, background_color=BACKGROUND_COLOR, display_size=DISPLAY_SIZE, output_dir=OUTPUT_DIR, add_shadow=True, write=True, show=False):
+    if input_filepath is None:
+        input_filepath = input('Please provide an input file path: ')
 
-    original = cv2.imread(input_file, cv2.IMREAD_UNCHANGED)
+    original = cv2.imread(input_filepath, cv2.IMREAD_UNCHANGED)
     if original is None:
-        print(f'Error: could not read input image {input_file}')
+        print(f'Error: could not read input image {input_filepath}')
         return
 
     # scale up the image
@@ -94,7 +95,7 @@ def run(input_file, scale=SCALE, background_color=BACKGROUND_COLOR, display_size
 
     # result output
     if write:
-        write_images(upscaled, result, output_dir)
+        write_images(upscaled, result, output_dir, input_filepath)
     if show:
         show_images(original, upscaled, result)
 
@@ -174,11 +175,24 @@ def show_images(image, upscaled, result):
     cv2.destroyAllWindows()
 
 
-def write_images(upscaled, result, output_dir):
+def write_images(upscaled, result, output_dir, input_filepath):
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
-    cv2.imwrite(os.path.join(output_dir, 'upscaled.png'), upscaled)
-    cv2.imwrite(os.path.join(output_dir, 'result.png'), result)
+    if not os.path.exists(os.path.join(output_dir, 'Transparent 10x')):
+        os.makedirs(os.path.join(output_dir, 'Transparent 10x'))
+    if not os.path.exists(os.path.join(output_dir, 'Display Form')):
+        os.makedirs(os.path.join(output_dir, 'Display Form'))
+
+    p = Path(input_filepath)
+    upscaled_path = os.path.join(
+        output_dir, 'Transparent 10x', f'{p.stem}x10{p.suffix}')
+    display_path = os.path.join(
+        output_dir, 'Display Form', f'{p.stem}_Display{p.suffix}')
+
+    if not cv2.imwrite(upscaled_path, upscaled):
+        print(f'Error: could not write upscaled image to {upscaled_path}')
+    if not cv2.imwrite(display_path, result):
+        print(f'Error: could not write display image to {display_path}')
 
 
 def hex_to_rgb(hex):
