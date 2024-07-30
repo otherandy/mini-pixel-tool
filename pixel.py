@@ -62,7 +62,18 @@ def main():
     write = not args.no_write
     show = args.show
 
+    run(input_file, scale, background_color,
+        display_size, output_dir, add_shadow, write, show)
+
+
+def run(input_file, scale, background_color, display_size, output_dir, add_shadow, write, show):
+    if input_file is None:
+        input_file = input('Please provide an input file path: ')
+
     original = cv2.imread(input_file, cv2.IMREAD_UNCHANGED)
+    if original is None:
+        print(f'Error: could not read input image {input_file}')
+        return
 
     # scale up the image
     upscaled = cv2.resize(original, (0, 0), fx=scale, fy=scale,
