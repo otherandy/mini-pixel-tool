@@ -120,13 +120,13 @@ def run(input_filepath, scale=SCALE,
 
     # result output
     if write:
-        write_images(upscaled, result, input_filepath, output_dir,
-                     upscale_dir, display_dir)
+        write_images(upscaled, result, input_filepath, scale,
+                     output_dir, upscale_dir, display_dir)
     if show:
         show_images(original, upscaled, result)
 
 
-def write_images(upscaled, result, input_filepath,
+def write_images(upscaled, result, input_filepath, scale,
                  output_dir, upscale_dir, display_dir):
     # create diretories if they don't exist
     if not os.path.exists(output_dir):
@@ -141,7 +141,7 @@ def write_images(upscaled, result, input_filepath,
     # write upscaled image
     p = Path(input_filepath)
     upscaled_path = os.path.join(
-        output_dir, upscale_dir, f'{p.stem}x10{p.suffix}')
+        output_dir, upscale_dir, f'{p.stem}x{scale}{p.suffix}')
     if not cv2.imwrite(upscaled_path, upscaled):
         print(f'Error: could not write upscaled image to {upscaled_path}')
 
