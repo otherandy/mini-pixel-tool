@@ -16,16 +16,16 @@ DEBUG = False
 
 def main():
     parser = argparse.ArgumentParser(
-        prog='mini_pixel.py',
+        prog='mini_pixel',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=textwrap.dedent('''\
             Mini Pixel Utility Tool
             -----------------------
 
             Upscales a mini pixel, creates a new display image and adds a shadow
-            (requires a_Shadow2_MiniPixelDisplay.png in the current directory).
+            (requires a_Shadow2_MiniPixelDisplay.png).
             '''),
-        epilog='Example: python pixel.py input.png -s 10 -c e4dccd -d 500 -o \'./out\' --no-shadow --show --no-write')
+        epilog='Example: mini_pixel input.png -s 10 -c e4dccd -d 500 -o \'./out\' --no-shadow --no-write --show')
 
     parser.add_argument('input_filepath', type=str,
                         help='path to the input image')
@@ -48,10 +48,10 @@ def main():
 
     parser.add_argument('--no-shadow', action='store_true',
                         help='do not add a shadow')
-    parser.add_argument('--show', action='store_true',
-                        help='show the result, press any key to close the window')
     parser.add_argument('--no-write', action='store_true',
                         help='do not write the result to the output directory')
+    parser.add_argument('--show', action='store_true',
+                        help='show the result, press any key to close the windows')
     args = parser.parse_args()
 
     input_filepath = args.input_filepath
@@ -90,7 +90,8 @@ def run(input_filepath, scale=SCALE, background_color=BACKGROUND_COLOR, display_
     offsetY = (ww - h) // 2
 
     if add_shadow:
-        add_shadow_image(result, offsetX, offsetY, scale, original.shape[0])
+        add_shadow_image(result, offsetX, offsetY,
+                         scale, original.shape[0])
     add_transparent_image(result, upscaled, offsetX, offsetY)
 
     # result output
@@ -125,6 +126,7 @@ def find_lower_right_pixel(image):
     return None, None
 
 
+# https://stackoverflow.com/a/71701023
 def add_transparent_image(background, foreground, x_offset=None, y_offset=None):
     bg_h, bg_w, bg_channels = background.shape
     fg_h, fg_w, fg_channels = foreground.shape
@@ -178,19 +180,23 @@ def show_images(image, upscaled, result):
 def write_images(upscaled, result, output_dir, input_filepath):
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
+
+    # write upscaled image
     if not os.path.exists(os.path.join(output_dir, 'Transparent 10x')):
         os.makedirs(os.path.join(output_dir, 'Transparent 10x'))
-    if not os.path.exists(os.path.join(output_dir, 'Display Form')):
-        os.makedirs(os.path.join(output_dir, 'Display Form'))
 
     p = Path(input_filepath)
     upscaled_path = os.path.join(
         output_dir, 'Transparent 10x', f'{p.stem}x10{p.suffix}')
-    display_path = os.path.join(
-        output_dir, 'Display Form', f'{p.stem}_Display{p.suffix}')
-
     if not cv2.imwrite(upscaled_path, upscaled):
         print(f'Error: could not write upscaled image to {upscaled_path}')
+
+    # write display image
+    if not os.path.exists(os.path.join(output_dir, 'Display Form')):
+        os.makedirs(os.path.join(output_dir, 'Display Form'))
+
+    display_path = os.path.join(
+        output_dir, 'Display Form', f'{p.stem}_Display{p.suffix}')
     if not cv2.imwrite(display_path, result):
         print(f'Error: could not write display image to {display_path}')
 
