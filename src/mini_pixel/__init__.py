@@ -64,7 +64,11 @@ def main():
                         help=f'display output subdirectory (default: {DISPLAY_DIR})')
 
     parser.add_argument('--no-write', action='store_true',
-                        help='do not write the result to the output directory')
+                        help='do not write the results to the output directory')
+    parser.add_argument('--no-scaled', action='store_true',
+                        help='do not write the scaled image to the output directory')
+    parser.add_argument('--no-display', action='store_true',
+                        help='do not write the display image to the output directory')
     parser.add_argument('--show', action='store_true',
                         help='show the result, press any key to close the windows')
     args = parser.parse_args()
@@ -82,18 +86,21 @@ def main():
     display_dir = args.display_dir if not flat_write else ''
 
     write = not args.no_write
+    no_scaled = args.no_scaled
+    no_display = args.no_display
     show = args.show
 
     run(input_filepath, scale,
         background_color, display_size,
         output_dir, upscale_dir, display_dir,
-        add_shadow, write, show)
+        add_shadow, write, no_scaled, no_display, show)
 
 
 def run(input_filepath, scale=SCALE,
         background_color=BACKGROUND_COLOR, display_size=DISPLAY_SIZE,
         output_dir=OUTPUT_DIR, upscale_dir=UPSCALE_DIR, display_dir=DISPLAY_DIR,
-        add_shadow=True, write=True, show=False):
+        add_shadow=True, write=True, no_scaled=False, no_display=False,
+        show=False):
 
     if input_filepath is None:
         input_filepath = input('Please provide an input file path: ')
@@ -124,13 +131,15 @@ def run(input_filepath, scale=SCALE,
     # result output
     if write:
         write_images(upscaled, result, input_filepath, scale,
-                     output_dir, upscale_dir, display_dir)
+                     output_dir, upscale_dir, display_dir,
+                     no_scaled, no_display)
     if show:
         show_images(original, upscaled, result)
 
 
 def write_images(upscaled, result, input_filepath, scale,
-                 output_dir, upscale_dir, display_dir):
+                 output_dir, upscale_dir, display_dir,
+                 no_scaled, no_display):
     # create diretories if they don't exist
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -141,18 +150,20 @@ def write_images(upscaled, result, input_filepath, scale,
     if not os.path.exists(os.path.join(output_dir, display_dir)):
         os.makedirs(os.path.join(output_dir, display_dir))
 
-    # write upscaled image
     p = Path(input_filepath)
-    upscaled_path = os.path.join(
-        output_dir, upscale_dir, f'{p.stem}x{scale}{p.suffix}')
-    if not cv2.imwrite(upscaled_path, upscaled):
-        print(f'Error: could not write upscaled image to {upscaled_path}')
+    # write upscaled image
+    if not no_scaled:
+        upscaled_path = os.path.join(
+            output_dir, upscale_dir, f'{p.stem}x{scale}{p.suffix}')
+        if not cv2.imwrite(upscaled_path, upscaled):
+            print(f'Error: could not write upscaled image to {upscaled_path}')
 
     # write display image
-    display_path = os.path.join(
-        output_dir, display_dir, f'{p.stem}_Display{p.suffix}')
-    if not cv2.imwrite(display_path, result):
-        print(f'Error: could not write display image to {display_path}')
+    if not no_display:
+        display_path = os.path.join(
+            output_dir, display_dir, f'{p.stem}_Display{p.suffix}')
+        if not cv2.imwrite(display_path, result):
+            print(f'Error: could not write display image to {display_path}')
 
 
 def show_images(image, upscaled, result):
